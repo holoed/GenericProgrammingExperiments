@@ -6,31 +6,21 @@ import RecursionSchemes
 import Zippers
 import Expr
 import Control.Monad.State hiding (modify)
+import ExprUtils
 
 sample :: Exp
 sample = app (app (lit 1) (lit 2)) (app (lit 3) (lit 4))
 
-alg :: Ann ExpF (Loc ExpF) (State (Maybe (Loc ExpF)) Exp) -> State (Maybe (Loc ExpF)) Exp
-alg (Ann p (Let n e1 e2)) = do
-  e1' <- e1
-  e2' <- e2
---  _ <- put (Just p)
-  return (leT n e1' e2')
-alg (Ann _ (Lam n e)) = do
-  e' <- e
-  return (lam n e')
-alg (Ann p (App e1 e2)) = do
-  e1' <- e1
-  e2' <- e2
---  _ <- put (Just p)
-  return (app e1' e2')
-alg (Ann _ (Var x)) = return (var x)
-alg (Ann p (Lit v)) = do
+type Carrier = State (Maybe (Loc ExpF)) Exp
+
+alg :: (F Carrier -> Carrier) -> (F Carrier -> Carrier)
+alg _ (Ann p (Lit 3))  = do
   _ <- put (Just p)
-  return (lit v)
+  return (lit 3)
+alg k x = k x
 
 transformed :: Maybe (Loc ExpF)
-transformed = execState (cataRec alg (locations sample)) Nothing
+transformed = execState (cataRec (alg exprAlg) (locations sample)) Nothing
 
 sampleZipped :: Loc ExpF
 sampleZipped = root sample
