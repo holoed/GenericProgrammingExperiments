@@ -41,6 +41,10 @@ extract = focus
 replace :: Fix f -> Loc f -> Loc f
 replace new loc = loc { focus = new }
 
+-- | Modifies the subtree at focus with effects.
+modifyM :: Monad m => (Fix f -> m (Fix f)) -> Loc f -> m (Loc f)
+modifyM h loc = fmap (`replace` loc) (h (focus loc))
+
 -- | Modifies the subtree at focus.
 modify :: (Fix f -> Fix f) -> Loc f -> Loc f
 modify h loc = replace (h (focus loc)) loc
@@ -98,3 +102,9 @@ locations :: Traversable f => Fix f -> Attr f (Loc f)
 locations tree = go (root tree) tree where
   go loc (In t) = In (Ann loc t') where
     t' = enumerateWith_ (\j x -> go (unsafeMoveDown j loc) x) t
+
+moveDownUntil :: Traversable f => (f (Fix f) -> Bool) -> Loc f -> Maybe(Loc f)
+moveDownUntil p l = listToMaybe $ take 1 (g (f l))
+  where f l' = takeWhile isJust ((`moveDown` l') <$> [0..]) >>= maybeToList
+        g ls = let xs = filter (p . out . extract) ls in
+               if null xs then g (ls >>= f) else xs

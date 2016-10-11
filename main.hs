@@ -31,11 +31,16 @@ downOnce = moveDown 0 sampleZipped
 downTwice :: Maybe (Loc ExpF)
 downTwice =  downOnce >>= moveDown 0
 
-modifyOnce :: Maybe (Loc ExpF)
-modifyOnce = fmap (modify (\_ -> lit 43)) downTwice
+modifyOnce :: Monad m => m (Maybe (Loc ExpF))
+modifyOnce = sequence (fmap (modifyM (\_ -> return (lit 43))) downTwice)
 
-tree :: Maybe Exp
-tree = fmap extract (modifyOnce >>= moveUp >>= moveUp)
+tree :: Monad m => m (Maybe Exp)
+tree = (\x -> fmap extract (x >>= moveUp >>= moveUp)) <$> modifyOnce
+
+movedDown :: Maybe (Loc ExpF)
+movedDown = moveDownUntil (\x -> case x of
+                                  Lit _ -> True
+                                  _ -> False) sampleZipped
 
 main :: IO ()
 main = print transformed
