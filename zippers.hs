@@ -106,5 +106,6 @@ locations tree = go (root tree) tree where
 moveDownUntil :: Traversable f => (f (Fix f) -> Bool) -> Loc f -> Maybe(Loc f)
 moveDownUntil p l = listToMaybe $ take 1 (g (f l))
   where f l' = takeWhile isJust ((`moveDown` l') <$> [0..]) >>= maybeToList
-        g ls = let xs = filter (p . out . extract) ls in
+        g ls = if null ls then ls else
+               let xs = filter (p . out . extract) ls in
                if null xs then g (ls >>= f) else xs

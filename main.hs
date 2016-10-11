@@ -39,7 +39,7 @@ tree = (\x -> fmap extract (x >>= moveUp >>= moveUp)) <$> modifyOnce
 
 movedDown :: Maybe (Loc ExpF)
 movedDown = moveDownUntil (\x -> case x of
-                                  Lit _ -> True
+                                  Lit 1 -> True
                                   _ -> False) sampleZipped
 
 main :: IO ()
